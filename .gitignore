@@ -54,3 +54,5 @@ temp/
 **/.agents/
 ORIGINAL_REQUEST.md
 **/ORIGINAL_REQUEST.md
+*.exe
+**/*.exe

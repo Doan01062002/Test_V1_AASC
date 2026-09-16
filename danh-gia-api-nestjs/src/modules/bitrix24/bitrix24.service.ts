@@ -1,4 +1,4 @@
-﻿import {
+import {
   Injectable,
   Logger,
   BadGatewayException,
@@ -135,10 +135,15 @@ export class Bitrix24Service {
     const cleanMethod = method.endsWith('.json') ? method : `${method}.json`;
     const url = `${endpoint}${cleanMethod}`;
 
+    const isWebhookEndpoint =
+      endpoint.includes('/rest/1/') ||
+      /\/rest\/\d+\/[a-zA-Z0-9_-]+\/?$/.test(endpoint) ||
+      token.refreshToken === 'webhook_permanent';
+
     try {
       const body = {
         ...payload,
-        auth: token.accessToken,
+        ...(isWebhookEndpoint ? {} : { auth: token.accessToken }),
       };
 
       const response = await firstValueFrom(
@@ -174,7 +179,7 @@ export class Bitrix24Service {
         errorDesc.toLowerCase().includes('expired_token') ||
         errorDesc.toLowerCase().includes('token has expired');
 
-      if (isTokenExpired && !isRetry) {
+      if (isTokenExpired && !isRetry && !isWebhookEndpoint) {
         this.logger.warn(
           `Nhận lỗi token hết hạn từ Bitrix24 (${errorCode || status}). Đang làm mới và thử lại...`,
         );

@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -64,6 +64,7 @@ export class AuthService {
     if (accessToken && refreshToken) {
       const clientEndpoint =
         payload.client_endpoint ||
+        payload.clientEndpoint ||
         payload.CLIENT_ENDPOINT ||
         payload.auth?.client_endpoint ||
         (domain ? `https://${domain}/rest/` : undefined);

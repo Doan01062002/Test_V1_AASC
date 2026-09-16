@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build & test artifacts
+dist/
+coverage/
+
+# SQLite databases
+*.sqlite
+*.sqlite-journal
+
+# Logs & temp
+*.log
+.env

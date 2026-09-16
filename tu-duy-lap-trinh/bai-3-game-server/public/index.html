@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Game Trực Tuyến - Line 98 & Cờ Caro X O</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+  <!-- Header & Navigation -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-badge">GAMES</div>
+      <div class="header-titles">
+        <h2>Game Server Pro</h2>
+        <span class="header-subtitle">Line 98 3D & Cờ Caro 15x15</span>
+      </div>
+    </div>
+
+    <nav class="nav-tabs">
+      <button class="nav-btn active" data-tab="line98" id="tabBtnLine98">🎮 Line 98</button>
+      <button class="nav-btn" data-tab="caro" id="tabBtnCaro">⚔️ Cờ Caro X O</button>
+      <button class="nav-btn" data-tab="account" id="tabBtnAccount">👤 Tài Khoản</button>
+    </nav>
+
+    <div class="header-right">
+      <!-- Latency / Connection Indicator -->
+      <div class="latency-badge" id="latencyBadge" title="Độ trễ kết nối máy chủ">
+        <div class="status-dot connected" id="socketStatusDot"></div>
+        <span id="latencyText">-- ms</span>
+      </div>
+
+      <!-- User Badge -->
+      <div class="user-badge" id="userBadge" title="Xem thông tin tài khoản">
+        <div class="user-avatar-small" id="headerAvatar">👤</div>
+        <span id="userStatusText">Khách (Chưa đăng nhập)</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================================================= -->
+    <!-- TAB 1: GAME LINE 98 -->
+    <!-- ============================================================= -->
+    <section id="line98Tab" class="tab-content active">
+      <div class="game-container">
+        <!-- Canvas bàn cờ 9x9 -->
+        <div class="canvas-wrapper">
+          <div class="canvas-header-bar">
+            <span class="board-badge">BÀN CỜ 9x9</span>
+            <button class="icon-btn" id="btnLine98Sound" title="Bật/Tắt âm thanh">🔊</button>
+          </div>
+          <canvas id="line98Canvas" width="450" height="450"></canvas>
+        </div>
+
+        <!-- Sidebar thông tin Line 98 -->
+        <div class="game-sidebar">
+          <div class="score-grid">
+            <div class="card stat-box">
+              <div class="stat-label">Điểm Số Hiện Tại</div>
+              <div class="stat-value" id="line98Score">0</div>
+            </div>
+            <div class="card stat-box highlight">
+              <div class="stat-label">Kỷ Lục (High Score)</div>
+              <div class="stat-value gold" id="line98HighScore">0</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label" style="text-align: center;">Bóng Dự Báo Lượt Tới</div>
+            <div class="next-balls-preview" id="line98NextBalls">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label" style="margin-bottom: 0.5rem;">Trợ Giúp Nước Đi Khả Thi</div>
+            <div class="suggestion-box" id="line98Suggestion">
+              Bấm nút "Trợ Giúp" để hệ thống tìm kiếm gợi ý nước đi tối ưu.
+            </div>
+            <button class="btn btn-accent" id="btnLine98Help" style="width: 100%; margin-top: 0.75rem;">
+              💡 Trợ Giúp (Gợi Ý)
+            </button>
+          </div>
+
+          <div class="card" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button class="btn btn-primary" id="btnLine98NewGame">
+              🔄 Chơi Ván Mới
+            </button>
+          </div>
+
+          <div class="card rules-card">
+            <strong style="color: var(--text-primary); display: block; margin-bottom: 0.35rem;">💎 Hướng dẫn
+              chơi:</strong>
+            <p>• Nhấp vào bóng pha lê và di chuyển tới ô trống hợp lệ.</p>
+            <p>• Xếp từ 5 viên đá cùng màu thẳng hàng (ngang, dọc, chéo) để ghi điểm.</p>
+            <p>• Mỗi lượt không nổ hàng, 3 viên ngọc mới sẽ xuất hiện ngẫu nhiên.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- TAB 2: GAME CỜ CARO X O -->
+    <!-- ============================================================= -->
+    <section id="caroTab" class="tab-content">
+      <!-- Caro Mode Selector (Online vs AI Bot) -->
+      <div class="caro-mode-bar">
+        <div class="mode-switch-group">
+          <button class="mode-btn active" id="btnCaroModeOnline">
+            🎯 Ghép Cặp Online (WebSocket)
+          </button>
+          <button class="mode-btn" id="btnCaroModeBot">
+            🤖 Luyện Tập Với Máy (AI Bot)
+          </button>
+        </div>
+        <div class="mode-desc" id="caroModeDesc">
+          Chế độ nhiều người chơi: Tự động ghép cặp đấu ngẫu nhiên qua WebSocket máy chủ.
+        </div>
+      </div>
+
+      <!-- Caro Info Bar -->
+      <div class="caro-info-bar">
+        <div class="player-card">
+          <div class="symbol-badge badge-x" id="caroPlayerXBadge">X</div>
+          <div>
+            <div class="player-name" id="caroPlayerXName">Chờ đối thủ...</div>
+            <small class="player-role" id="caroPlayerXRole">Đi trước</small>
+          </div>
+        </div>
+
+        <div class="turn-center-box">
+          <div class="turn-indicator" id="caroTurnIndicator">Chưa vào trận</div>
+          <div id="caroMatchmakingStatus" class="caro-status-text">
+            Nhấn "Tìm Trận" để bắt đầu ghép cặp trực tuyến!
+          </div>
+        </div>
+
+        <div class="player-card right-aligned">
+          <div class="symbol-badge badge-o" id="caroPlayerOBadge">O</div>
+          <div>
+            <div class="player-name" id="caroPlayerOName">Chờ đối thủ...</div>
+            <small class="player-role" id="caroPlayerORole">Đi sau</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="caro-layout-grid">
+        <!-- Canvas bàn cờ 15x15 -->
+        <div class="canvas-wrapper">
+          <div class="canvas-header-bar">
+            <span class="board-badge">BÀN CỜ GỖ 15x15 CHUẨN</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <button class="icon-btn" id="btnCaroSound" title="Bật/Tắt âm thanh">🔊</button>
+              <span class="caro-move-counter" id="caroMoveCounter">Nước đi: 0</span>
+            </div>
+          </div>
+          <canvas id="caroCanvas" width="480" height="480"></canvas>
+        </div>
+
+        <!-- Sidebar điều khiển Caro -->
+        <div class="game-sidebar caro-sidebar">
+          <!-- Bảng điều khiển chế độ Online -->
+          <div class="card" id="caroOnlineControls">
+            <h3 class="card-title">Ghép Cặp Trực Tuyến</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.85rem;">
+              Ghép đấu tự động với người chơi khác đang online trên hệ thống.
+            </p>
+            <button class="btn btn-success" id="btnCaroFindMatch" style="width: 100%; margin-bottom: 0.5rem;">
+              🎯 Tìm Trận Ngẫu Nhiên
+            </button>
+            <button class="btn btn-secondary" id="btnCaroCancelMatch" style="width: 100%; display: none;">
+              ❌ Hủy Tìm Trận
+            </button>
+          </div>
+
+          <!-- Bảng điều khiển chế độ AI Bot -->
+          <div class="card" id="caroBotControls" style="display: none;">
+            <h3 class="card-title">Luyện Tập Với Máy (AI Bot)</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.85rem;">
+              Thử thách thuật toán AI Minimax 15x15 thông minh tức thì trong 1 tab.
+            </p>
+            <button class="btn btn-primary" id="btnCaroBotRestart" style="width: 100%; margin-bottom: 0.5rem;">
+              🔄 Ván Mới Với Máy
+            </button>
+            <div class="bot-level-badge">
+              <span>Độ khó AI:</span> <strong style="color: #38bdf8;">Chuyên Gia (Pro)</strong>
+            </div>
+          </div>
+
+          <div class="card rules-card">
+            <strong style="color: var(--text-primary); display: block; margin-bottom: 0.35rem;">⚔️ Luật thi đấu
+              Caro:</strong>
+            <p>• Bàn cờ 15x15 với các điểm sao Hoshi chuẩn quốc tế.</p>
+            <p>• Hai bên luân phiên đặt quân cờ X và O tại các giao điểm.</p>
+            <p>• Người đầu tiên xếp đủ 5 quân liên tiếp (ngang, dọc hoặc chéo) là người chiến thắng!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Lịch Sử Trận Đấu Gần Đây (SQLite caro_matches) -->
+      <div class="card match-history-section">
+        <div class="history-header">
+          <div class="history-title-group">
+            <h3 class="card-title" style="margin-bottom: 0.2rem;">📜 Lịch Sử Trận Đấu Gần Đây</h3>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+              Dữ liệu được lưu trữ trực tiếp trong cơ sở dữ liệu SQLite (`caro_matches`)
+            </span>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btnRefreshHistory">
+            🔄 Làm Mới
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="history-table" id="caroHistoryTable">
+            <thead>
+              <tr>
+                <th>Thời Gian</th>
+                <th>Mã Trận / Phòng</th>
+                <th>Người Chơi (X)</th>
+                <th>Đối Thủ (O)</th>
+                <th>Kết Quả</th>
+                <th>Số Nước Đi</th>
+              </tr>
+            </thead>
+            <tbody id="caroHistoryTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 1.5rem;">
+                  Đang tải lịch sử ván đấu...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- TAB 3: QUẢN LÝ TÀI KHOẢN (AUTH & PROFILE) -->
+    <!-- ============================================================= -->
+    <section id="accountTab" class="tab-content">
+      <!-- 1. Khi chưa đăng nhập: Hiển thị duy nhất một Auth Card căn giữa thanh lịch -->
+      <div class="auth-wrapper" id="authBox">
+        <div class="card auth-card">
+          <!-- Auth Switch Toggle (Login vs Register) -->
+          <div class="auth-switch">
+            <button class="auth-switch-btn active" id="switchLogin">Đăng Nhập</button>
+            <button class="auth-switch-btn" id="switchRegister">Đăng Ký</button>
+          </div>
+
+          <h3 class="auth-title" id="authFormTitle">Đăng Nhập Tài Khoản</h3>
+          <p class="auth-desc" id="authFormSubtitle">Đăng nhập để đồng bộ kết quả ván đấu và lưu kỷ lục cá nhân.</p>
+
+          <form id="authForm">
+            <div class="form-group">
+              <label for="usernameInput">Tên đăng nhập (Username) <span class="required">*</span></label>
+              <input type="text" class="form-control" id="usernameInput" required placeholder="Nhập username...">
+            </div>
+
+            <div class="form-group">
+              <label for="passwordInput">Mật khẩu <span class="required">*</span></label>
+              <input type="password" class="form-control" id="passwordInput" required placeholder="Nhập mật khẩu...">
+            </div>
+
+            <div id="registerExtraFields" style="display: none;">
+              <div class="form-group">
+                <label for="emailInput">Địa chỉ Email (Tùy chọn)</label>
+                <input type="email" class="form-control" id="emailInput" placeholder="name@example.com">
+              </div>
+
+              <div class="form-group">
+                <label for="nicknameInput">Biệt danh / Nickname (Tùy chọn)</label>
+                <input type="text" class="form-control" id="nicknameInput" placeholder="Tên hiển thị trong bảng đấu...">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btnAuthSubmit">
+              Đăng Nhập
+            </button>
+
+            <div class="alert-message" id="authAlert"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 2. Khi đã đăng nhập: Dashboard hồ sơ tài khoản và form chỉnh sửa -->
+      <div class="profile-dashboard" id="profileDashboard" style="display: none;">
+        <div class="profile-grid">
+          <!-- Thẻ tóm tắt thông tin người dùng -->
+          <div class="card profile-info-card">
+            <div class="profile-header-banner">
+              <div class="profile-avatar-large" id="profAvatar">A</div>
+              <div class="profile-header-meta">
+                <h3 class="profile-display-name" id="profDisplayName">Người Chơi</h3>
+                <span class="profile-username-tag" id="profUsernameTag">@username</span>
+              </div>
+            </div>
+
+            <div class="profile-details-list">
+              <div class="detail-row">
+                <span class="detail-label">Biệt danh:</span>
+                <span class="detail-value" id="profNickname">--</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value" id="profEmail">--</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Mã định danh (UUID):</span>
+                <div class="uuid-container">
+                  <span class="detail-value uuid-text" id="profId">--</span>
+                  <button class="btn btn-secondary btn-xs" id="btnCopyUuid" title="Sao chép UUID">📋</button>
+                </div>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Ngày tham gia:</span>
+                <span class="detail-value" id="profCreatedAt">--</span>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-danger btn-block" id="btnLogout" style="margin-top: 1.5rem;">
+              🚪 Đăng Xuất Tài Khoản
+            </button>
+          </div>
+
+          <!-- Form cập nhật hồ sơ cá nhân -->
+          <div class="card profile-edit-card">
+            <h3 class="card-title">Cập Nhật Thông Tin Cá Nhân</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+              Chỉnh sửa biệt danh hiển thị và email liên hệ. Thay đổi sẽ lập tức đồng bộ toàn hệ thống.
+            </p>
+
+            <form id="updateProfileForm">
+              <div class="form-group">
+                <label for="updateNicknameInput">Biệt danh / Nickname mới</label>
+                <input type="text" class="form-control" id="updateNicknameInput" placeholder="Nhập biệt danh mới...">
+              </div>
+
+              <div class="form-group">
+                <label for="updateEmailInput">Địa chỉ Email mới</label>
+                <input type="email" class="form-control" id="updateEmailInput" placeholder="Nhập email mới...">
+              </div>
+
+              <button type="submit" class="btn btn-success btn-block" style="margin-top: 1rem;">
+                💾 Lưu Thay Đổi
+              </button>
+
+              <div class="alert-message" id="profileAlert"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================= -->
+  <!-- MODAL: LINE 98 GAME OVER (Glassmorphism Modal) -->
+  <!-- ============================================================= -->
+  <div class="modal-overlay" id="line98GameOverModal" style="display: none;">
+    <div class="modal-content glass-card">
+      <div class="modal-trophy">🏆</div>
+      <h2 class="modal-title">Trò Chơi Kết Thúc!</h2>
+      <p class="modal-subtitle">Bàn cờ Line 98 đã đầy và không còn nước đi hợp lệ.</p>
+
+      <div class="modal-stats-box">
+        <div class="modal-stat-item">
+          <span class="modal-stat-label">Điểm Số Ván Này</span>
+          <span class="modal-stat-val" id="modalFinalScore">0</span>
+        </div>
+        <div class="modal-stat-divider"></div>
+        <div class="modal-stat-item">
+          <span class="modal-stat-label">Kỷ Lục Cao Nhất</span>
+          <span class="modal-stat-val gold" id="modalHighScore">0</span>
+        </div>
+      </div>
+
+      <div class="new-record-banner" id="modalNewRecordBadge" style="display: none;">
+        ✨ KỶ LỤC MỚI ĐÃ ĐƯỢC THIẾT LẬP! ✨
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-lg" id="btnLine98ModalRestart">
+          🔄 Chơi Lại Ngay
+        </button>
+        <button class="btn btn-secondary" id="btnLine98ModalClose">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>

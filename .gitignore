@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build and test outputs
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.nyc_output/
+
+# SQLite runtime databases
+*.sqlite
+**/*.sqlite
+*.sqlite-journal
+**/*.sqlite-journal
+*.db
+**/*.db
+*.db-journal
+**/*.db-journal
+
+# Environment variables & local configurations
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & Cache
+logs/
+**/logs/
+*.log
+**/*.log
+tmp/
+**/tmp/
+temp/
+**/temp/
+.cache/
+**/.cache/
+
+# Agent scratch directories & metadata
+.agents/
+**/.agents/
+ORIGINAL_REQUEST.md
+**/ORIGINAL_REQUEST.md

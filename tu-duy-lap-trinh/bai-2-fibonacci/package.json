@@ -1,0 +1,19 @@
+{
+  "name": "bai-2-fibonacci",
+  "version": "1.0.0",
+  "description": "Bài 2: Tính Số Fibonacci Thứ 50 bằng JavaScript (Dynamic Programming & BigInt)",
+  "main": "fibonacci.js",
+  "scripts": {
+    "start": "node fibonacci.js",
+    "benchmark": "node benchmark.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "fibonacci",
+    "dynamic-programming",
+    "bigint",
+    "benchmark"
+  ],
+  "author": "Candidate",
+  "license": "UNLICENSED"
+}

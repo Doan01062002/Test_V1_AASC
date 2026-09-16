@@ -453,13 +453,37 @@ authForm.addEventListener('submit', async (e) => {
   const username = document.getElementById('usernameInput').value.trim();
   const password = document.getElementById('passwordInput').value;
 
+  // Client-side Validation tức thời
+  if (!username || username.length < 3) {
+    authAlert.className = 'alert-message alert-error';
+    authAlert.textContent = 'Tên đăng nhập (username) phải có tối thiểu 3 ký tự.';
+    authAlert.style.display = 'block';
+    return;
+  }
+
+  if (!password || password.length < 6) {
+    authAlert.className = 'alert-message alert-error';
+    authAlert.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự.';
+    authAlert.style.display = 'block';
+    return;
+  }
+
   const endpoint = isRegisterMode ? '/auth/register' : '/auth/login';
   const payload = { username, password };
 
   if (isRegisterMode) {
     const email = document.getElementById('emailInput').value.trim();
     const nickname = document.getElementById('nicknameInput').value.trim();
-    if (email) payload.email = email;
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        authAlert.className = 'alert-message alert-error';
+        authAlert.textContent = 'Địa chỉ email không đúng định dạng (ví dụ: name@example.com).';
+        authAlert.style.display = 'block';
+        return;
+      }
+      payload.email = email;
+    }
     if (nickname) payload.nickname = nickname;
   }
 
@@ -512,7 +536,16 @@ updateProfileForm.addEventListener('submit', async (e) => {
   const nickname = updateNicknameInput.value.trim();
   const payload = {};
   if (nickname) payload.nickname = nickname;
-  if (email) payload.email = email;
+  if (email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      profileAlert.className = 'alert-message alert-error';
+      profileAlert.textContent = 'Địa chỉ email không đúng định dạng (ví dụ: name@example.com).';
+      profileAlert.style.display = 'block';
+      return;
+    }
+    payload.email = email;
+  }
 
   const submitBtn = updateProfileForm.querySelector('button[type="submit"]');
   if (submitBtn) {

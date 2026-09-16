@@ -1,93 +1,113 @@
-# BÀI KIỂM TRA VỀ TƯ DUY LẬP TRÌNH - AASC
+# TỔNG HỢP BÀI THI ĐÁNH GIÁ NĂNG LỰC LẬP TRÌNH - AASC
 
-> **Ứng viên**: Hoàn thành theo toàn bộ yêu cầu trong file [`V1 - Bai Kiem tra ve Tu duy lap trinh.pdf`](./V1%20-%20Bai%20Kiem%20tra%20ve%20Tu%20duy%20lap%20trinh.pdf).  
-> **Thư mục dự án**: `tu-duy-lap-trinh/`  
-> **Công nghệ sử dụng**: Node.js v24, NestJS 10, TypeScript, TypeORM, SQLite, Socket.IO, Jest, HTML5 Canvas.
+> **Ứng viên**: Hoàn thành theo toàn bộ yêu cầu trong 2 tài liệu đề thi chính thức:
+> 1. [`V1 - Bai Kiem tra ve Tu duy lap trinh.pdf`](./V1%20-%20Bai%20Kiem%20tra%20ve%20Tu%20duy%20lap%20trinh.pdf)
+> 2. [`V1 - Bai Kiem tra Danh gia API co ban.pdf`](./V1%20-%20Bai%20Kiem%20tra%20Danh%20gia%20API%20co%20ban.pdf)  
+>
+> **Công nghệ sử dụng**: Node.js, NestJS 10, TypeScript, TypeORM, SQLite, Socket.IO, @nestjs/axios, Swagger OpenAPI, class-validator, Jest, HTML5 Canvas.
 
 ---
 
-## Danh Mục Các Bài Thi
+## Danh Mục Các Dự Án Trong Repository
 
-Dự án được tổ chức gọn gàng thành 3 bài độc lập trong thư mục `tu-duy-lap-trinh/`:
+Repository được tổ chức chuẩn mực thành 2 thư mục dự án độc lập tương ứng với 2 phần thi:
 
-| Thư mục | Tên bài | Mô tả tóm tắt | Trạng thái |
+| Thư mục dự án | Đề bài tương ứng | Nội dung triển khai | Trạng thái |
 | :--- | :--- | :--- | :---: |
-| [`tu-duy-lap-trinh/bai-1-task-api/`](./tu-duy-lap-trinh/bai-1-task-api) | **Bài 1: RESTful API với NestJS** | API CRUD Task theo mô hình MVC, TypeORM + SQLite, Swagger `/docs`, Pipes Validation, Jest Unit Test, Benchmark GET 100 records (< 200ms). | **HOÀN THÀNH (100%)** |
-| [`tu-duy-lap-trinh/bai-2-fibonacci/`](./tu-duy-lap-trinh/bai-2-fibonacci) | **Bài 2: Tính Số Fibonacci Thứ 50** | Thuật toán Dynamic Programming tối ưu O(n) thời gian, O(1) không gian với `BigInt`. Benchmark n = 10, 20, 50 trung bình < 1 ms. Báo cáo phân tích thuật toán. | **HOÀN THÀNH (100%)** |
-| [`tu-duy-lap-trinh/bai-3-game-server/`](./tu-duy-lap-trinh/bai-3-game-server) | **Bài 3: Phát Triển Server Game** | Game Server NestJS quản lý Auth (Bcrypt, JWT), Game Line 98 (BFS pathfinding, match 5, trợ giúp gợi ý nước đi), Game Cờ Caro X O (15x15, matchmaking online qua WebSocket), Web Client Canvas, Unit tests, Load test 12 clients latency < 200ms. | **HOÀN THÀNH (100%)** |
+| [`danh-gia-api-nestjs/`](./danh-gia-api-nestjs) | **Đánh Giá Kỹ Năng Lập Trình API với NestJS** | Tích hợp Bitrix24 REST API qua OAuth 2.0, tự động refresh token, SQLite TypeORM, CRUD Contact & Banking Requisites, ApiKeyGuard (`x-api-key`), Swagger `/docs`, 10 test suites (81 tests PASS 100%). | **HOÀN THÀNH (100%) ✅** |
+| [`tu-duy-lap-trinh/`](./tu-duy-lap-trinh) | **Bài Kiểm Tra Về Tư Duy Lập Trình** | Bao gồm 3 bài toán: Bài 1 RESTful Task API, Bài 2 Tính số Fibonacci F(50) BigInt O(n)/O(1), Bài 3 Game Server Line 98 & Cờ Caro X O WebSocket Client Canvas (79 tests PASS 100%). | **HOÀN THÀNH (100%) ✅** |
 
 ---
 
-## Hướng Dẫn Chạy Nhanh Toàn Bộ Bài Thi
+# PHẦN 1: BÀI KIỂM TRA ĐÁNH GIÁ KỸ NĂNG LẬP TRÌNH API VỚI NESTJS
 
-### 1. Bài 2: Thuật Toán Fibonacci F(50)
+> **Thư mục**: [`danh-gia-api-nestjs/`](./danh-gia-api-nestjs)  
+> **Xem tài liệu chi tiết**: [`danh-gia-api-nestjs/README.md`](./danh-gia-api-nestjs/README.md)
+
+### 1.1. Các Tính Năng Đã Triển Khai
+1. **OAuth 2.0 & Quản lý Token Bitrix24**:
+   - Endpoint `/install` (hỗ trợ cả GET redirect code và POST iframe payload).
+   - Trao đổi Authorization Code với `https://oauth.bitrix.info/oauth/token/` lấy `access_token` và `refresh_token`.
+   - Lưu trữ an toàn trong SQLite qua TypeORM (`BitrixToken` entity).
+   - Cơ chế tự động làm mới token chủ động (trước khi hết hạn 60s) và bị động (khi nhận lỗi `expired_token`).
+   - Service gọi API Bitrix24 tổng quát (`callBitrixAPI`) với cơ chế retry, timeout 10s, và logging chi tiết.
+2. **RESTful API Quản lý Contact & Requisites Ngân Hàng**:
+   - `GET /contacts`: Lấy danh sách contact kết hợp thông tin ngân hàng (`crm.contact.list` + `crm.requisite.list` + `crm.requisite.bankdetail.list`).
+   - `GET /contacts/:id`: Lấy chi tiết contact kèm thông tin ngân hàng.
+   - `POST /contacts`: Tạo mới contact với địa chỉ chi tiết, tự động tạo Requisite ngân hàng (`ENTITY_TYPE_ID = 3`) và Bank Detail.
+   - `PUT /contacts/:id`: Cập nhật thông tin contact và thông tin tài khoản ngân hàng.
+   - `DELETE /contacts/:id`: Xóa contact và toàn bộ requisites liên quan khỏi Bitrix24.
+3. **Bảo Mật & Xác Thực Dữ Liệu**:
+   - Bảo vệ toàn bộ endpoint CRM bằng Guard tùy biến (`ApiKeyGuard`), kiểm tra header `x-api-key`.
+   - DTO Validation nghiêm ngặt với `class-validator` (Email RFC 5322, SĐT Việt Nam/quốc tế).
+4. **Tài Liệu Swagger & Kiểm Thử**:
+   - Swagger UI tương tác tại `/docs` kèm hỗ trợ nút Authorize nhập `x-api-key`.
+   - Hướng dẫn tích hợp ngrok và tạo Bitrix24 Local Application chi tiết.
+   - **10 test suites, 81 tests PASS 100%** trên Jest.
+
+### 1.2. Hướng Dẫn Chạy Nhanh
 ```bash
+cd danh-gia-api-nestjs
+npm install
+npm run build
+
+# Chạy toàn bộ 81 unit tests
+npm test
+
+# Khởi chạy server tại cổng 3000
+npm run start:dev
+```
+- Swagger UI: [http://localhost:3000/docs](http://localhost:3000/docs)
+
+---
+
+# PHẦN 2: BÀI KIỂM TRA VỀ TƯ DUY LẬP TRÌNH
+
+> **Thư mục**: [`tu-duy-lap-trinh/`](./tu-duy-lap-trinh)  
+> **Xem tài liệu chi tiết**: [`tu-duy-lap-trinh/README.md`](./tu-duy-lap-trinh/README.md)
+
+### 2.1. Danh Sách 3 Bài Thi
+1. **Bài 1: RESTful API Quản Lý Task (NestJS)**:
+   - Thư mục: `tu-duy-lap-trinh/bai-1-task-api/`
+   - Kiến trúc MVC chuẩn NestJS, TypeORM + SQLite, Validation Pipes, Swagger `/docs`.
+   - Benchmark GET 100 bản ghi đạt **~12.58 ms** (yêu cầu < 200ms).
+   - Báo cáo lý thuyết NestJS & TypeScript: [`BaoCao_NestJS_LyThuyet.md`](./tu-duy-lap-trinh/bai-1-task-api/BaoCao_NestJS_LyThuyet.md).
+2. **Bài 2: Tính Số Fibonacci Thứ 50**:
+   - Thư mục: `tu-duy-lap-trinh/bai-2-fibonacci/`
+   - Thuật toán Dynamic Programming tối ưu O(n) thời gian, O(1) không gian với `BigInt`.
+   - Kết quả: **F(50) = 12,586,269,025n**, thời gian thực thi: **~0.001 ms** (yêu cầu < 1 ms).
+   - Báo cáo phân tích thuật toán: [`BaoCao_Fibonacci.md`](./tu-duy-lap-trinh/bai-2-fibonacci/BaoCao_Fibonacci.md).
+3. **Bài 3: Phát Triển Server Game (Line 98 & Cờ Caro)**:
+   - Thư mục: `tu-duy-lap-trinh/bai-3-game-server/`
+   - Quản lý tài khoản: Bcrypt hash, JWT auth, cập nhật profile.
+   - **Game Line 98**: BFS tìm đường đi ngắn nhất, nổ hàng ≥ 5 bóng, sinh 3 bóng mới, tính năng trợ giúp gợi ý nước đi tối ưu, bóng pha lê 3D với hiệu ứng nổ điểm.
+   - **Game Cờ Caro X O**: Bàn cờ 15x15, thắng 5 quân liên tiếp, chế độ luyện tập với Bot AI offline và ghép cặp online qua WebSocket.
+   - Web Client Canvas hiện đại, Load test 12 clients latency **~5.78 ms** (yêu cầu < 200ms).
+
+### 2.2. Hướng Dẫn Chạy Nhanh
+```bash
+# Bài 2: Fibonacci
 cd tu-duy-lap-trinh/bai-2-fibonacci
-npm start          # Chạy thuật toán tính F(50)
-npm test           # Chạy bộ test tự động xác minh F(10), F(20), F(50)
-npm run benchmark  # Chạy đo kiểm hiệu năng 10 lần
+npm start && npm test && npm run benchmark
+
+# Bài 1: Task API
+cd ../bai-1-task-api
+npm install && npm test && npm run benchmark && npm run start:dev
+
+# Bài 3: Game Server & Client
+cd ../bai-3-game-server
+npm install && npm test && npm run load-test && npm run start:dev
 ```
-*Kết quả:*
-- **F(50) = 12,586,269,025n**
-- Thời gian thực thi trung bình: **~0.001 ms** (đạt yêu cầu < 1 ms).
-- Xem báo cáo chi tiết: [`tu-duy-lap-trinh/bai-2-fibonacci/BaoCao_Fibonacci.md`](./tu-duy-lap-trinh/bai-2-fibonacci/BaoCao_Fibonacci.md).
+- Web Client Game: [http://localhost:3001](http://localhost:3001)
 
 ---
 
-### 2. Bài 1: RESTful Task API (NestJS)
-```bash
-cd tu-duy-lap-trinh/bai-1-task-api
-npm install
-npm run build
+## Bảng Tổng Hợp Kiểm Thử Toàn Bộ Repository
 
-# Chạy Unit Test
-npm test
-
-# Chạy kiểm thử hiệu năng GET 100 bản ghi (< 200ms)
-npm run benchmark
-
-# Khởi chạy server API (Cổng 3000)
-npm run start:dev
-```
-- **Tài liệu Swagger (OpenAPI)**: Mở trình duyệt truy cập [http://localhost:3000/docs](http://localhost:3000/docs).
-- **Báo cáo lý thuyết về NestJS & TypeScript**: [`tu-duy-lap-trinh/bai-1-task-api/BaoCao_NestJS_LyThuyet.md`](./tu-duy-lap-trinh/bai-1-task-api/BaoCao_NestJS_LyThuyet.md).
-
----
-
-### 3. Bài 3: Game Server & Client (NestJS + WebSockets)
-```bash
-cd tu-duy-lap-trinh/bai-3-game-server
-npm install
-npm run build
-
-# Chạy Unit Test cho 2 trò chơi (Line 98 & Cờ Caro)
-npm test
-
-# Chạy kiểm thử tải đồng thời (12 clients, latency < 200ms)
-npm run load-test
-
-# Khởi chạy Game Server & Web Client (Cổng 3001)
-npm run start:dev
-```
-- **Trải nghiệm Game Trực Tuyến**: Mở trình duyệt truy cập [http://localhost:3001](http://localhost:3001).
-  - Thử nghiệm **Line 98**: Di chuyển bóng pha lê 3D, hiệu ứng phóng to, nổ hàng, bấm nút "💡 Trợ Giúp".
-  - Thử nghiệm **Cờ Caro X O**: Chế độ thi đấu với Máy AI hoặc mở 2 tab ghép cặp Online qua WebSocket.
-  - Thử nghiệm **Tài khoản**: Đăng ký, đăng nhập JWT, đổi nickname & email.
-
----
-
-## Bảng Tổng Hợp Tiêu Chí Đánh Giá
-
-| Tiêu chí của Đề bài | Đạt được trong dự án | Đánh giá |
-| :--- | :--- | :---: |
-| **Tính chính xác & đầy đủ CRUD** | Đầy đủ Create, Read list/id, Update, Delete, DTO Validation Pipes. | **ĐẠT ✅** |
-| **Tài liệu hóa Swagger** | OpenAPI chuẩn mực tại endpoint `/docs` với mô tả trường chi tiết. | **ĐẠT ✅** |
-| **Độ trễ API GET 100 bản ghi < 200ms** | Đo lường thực tế đạt **~12.58 ms** (nhanh gấp 15 lần yêu cầu). | **ĐẠT ✅** |
-| **Tính chính xác F(50) & BigInt** | F(50) = 12,586,269,025n, kiểu `BigInt`, xác minh n = 10, 20, 50. | **ĐẠT ✅** |
-| **Thời gian chạy F(50) < 1ms** | Đo lường thực tế đạt **0.00103 ms** (nhanh hơn yêu cầu 1000 lần). | **ĐẠT ✅** |
-| **Quản lý tài khoản game** | Mã hóa Bcrypt, phát hành JWT token, cập nhật profile có JWT Guard. | **ĐẠT ✅** |
-| **Game Line 98** | BFS pathfinding, nổ chuỗi ≥ 5, sinh 3 bóng, trợ giúp gợi ý nước đi, lưu SQLite. | **ĐẠT ✅** |
-| **Game Cờ Caro X O** | Bàn cờ 15x15, thắng 5 quân liên tiếp, ghép cặp online qua WebSocket, lưu SQLite. | **ĐẠT ✅** |
-| **Giao diện đồ họa (Client)** | Giao diện HTML5 Canvas hiện đại, hiệu ứng chọn bóng phóng to, real-time sync. | **ĐẠT ✅** |
-| **Server xử lý ≥ 10 người chơi latency < 200ms** | Kịch bản Load Test 12 clients đồng thời đạt độ trễ trung bình **5.78 ms**. | **ĐẠT ✅** |
-| **Unit Test đầy đủ bằng Jest & Test runner** | 33 tests cho Bài 1 (Service + Controller 100% coverage), 9 tests cho Bài 2, 37 tests cho Bài 3 (32 service + 5 client canvas tests) — Tổng cộng 79 tests PASS 100%. | **ĐẠT ✅** |
+| Dự án | Số lượng Unit Tests | Tỷ lệ PASS | Build sạch |
+| :--- | :---: | :---: | :---: |
+| **danh-gia-api-nestjs** | 81 tests / 10 suites | **100% PASS ✅** | **0 lỗi ✅** |
+| **tu-duy-lap-trinh / Bài 1** | 33 tests / 2 suites | **100% PASS ✅** | **0 lỗi ✅** |
+| **tu-duy-lap-trinh / Bài 2** | 9 tests / 1 suite | **100% PASS ✅** | **0 lỗi ✅** |
+| **tu-duy-lap-trinh / Bài 3** | 37 tests / 5 suites | **100% PASS ✅** | **0 lỗi ✅** |
+| **TỔNG CỘNG** | **160 tests** | **100% PASS ✅** | **0 lỗi ✅** |
